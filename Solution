@@ -1,0 +1,57 @@
+
+import json
+from fractions import Fraction
+import sys
+
+def base_to_decimal(value, base):
+    decimal_value = 0
+    for digit in value:
+        if digit.isdigit():
+            digit_value = int(digit)
+        else:
+            digit_value = ord(digit.lower()) - ord('a') + 10
+        decimal_value = decimal_value * base + digit_value
+    return decimal_value
+
+def lagrange_interpolation(points, k):
+    selected_points = points[:k]
+    secret = Fraction(0)
+    for i in range(k):
+        xi, yi = selected_points[i]
+        li_0 = Fraction(1)
+        for j in range(k):
+            if i != j:
+                xj, _ = selected_points[j]
+                li_0 *= Fraction(-xj, xi - xj)
+        secret += yi * li_0
+    return int(secret)
+
+def solve_secret_sharing_from_file(filename):
+    with open(filename, 'r') as file:
+        data = json.load(file)
+    
+    k = data["keys"]["k"]
+    points = []
+    for key, value_data in data.items():
+        if key != "keys":
+            x = int(key)
+            base = int(value_data["base"])
+            value = value_data["value"]
+            y = base_to_decimal(value, base)
+            points.append((x, y))
+    points.sort()
+    secret = lagrange_interpolation(points, k)
+    print(secret)
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Usage: python secret_sharing.py <input_file.json>")
+    else:
+        solve_secret_sharing_from_file(sys.argv[1])
+
+
+
+
+
+
+
